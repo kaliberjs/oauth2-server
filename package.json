@@ -1,0 +1,22 @@
+{
+  "name": "kaliber-oauth2-server",
+  "version": "1.0.0",
+  "description": "## Register Application (can just be config)   - client ID (The client_id is a public identifier for apps. Even though it’s public, it’s best that it isn’t guessable by third parties)   - client secret? (The client_secret is a secret known only to the application and the authorization server. It must be sufficiently random to not be guessable)   - callback-url / redirect-url (server should never redirect to any other url)",
+  "main": "index.js",
+  "scripts": {
+    "dev": "PORT=3000 CONFIG_ENV=dev nodemon src/index.js",
+    "serve": "kaliber-serve",
+    "serve:dev": "PORT=8000 CONFIG_ENV=dev kaliber-serve",
+    "start": "npm-run-all --parallel watch serve:dev",
+    "watch": "CONFIG_ENV=dev kaliber-watch",
+    "lint": "npm-run-all --serial lint.javascript lint.styles",
+    "lint.javascript": "eslint -c .eslintrc --ignore-path .gitignore './**/*.js'",
+    "lint.styles": "stylelint --config .stylelintrc --ignore-path .gitignore './**/*.css'"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@kaliber/build": "^0.0.114",
+    "jsonwebtoken": "^8.5.1"
+  }
+}
