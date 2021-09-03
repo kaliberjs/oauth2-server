@@ -2,8 +2,6 @@ const { badRequest, unauthorized } = require('./api-handler/machinery/httpRespon
 const { sign, verify } = require('./jwt')
 const config = require('@kaliber/config')
 
-
-
 module.exports = async function handleApiRequest(location, req) {
 
   if (req.method === 'POST') return handlePost(location, req)
@@ -41,25 +39,55 @@ async function handleAuthorize(req) {
 }
 
 async function handleAccess(req) {
+  if (req.body.grant_type === 'code') return handleCodeGrand(req)
+  if (req.body.grant_type === 'refresh_token') return handleRefreshTokenGrand(req)
+}
+
+async function handleCodeGrand(req) {
   try {
     verify(req.body.code, config.apps[0].authorize_code_secret )
   } catch (e) {
-    return unauthorized('something wrong with the code')
+    return unauthorized('something wrong with the authorize_code')
   }
 
-  const refresh_token = sign({ data: 'we think about later' }, config.apps[0].refresh_code_secret)
+  const refresh_token = sign({
+    data: 'we think about this later'
+  },
+  config.apps[0].refresh_code_secret,
+  {
+    expiresIn: '1h'
+  })
 
   const accessToken = sign({
-    refresh_token,
     expiresIn: 3600,
     scope: 'any'
-  }, 'asdas')
+  }, config.apps[0].access_code_secret)
 
   return { status: 200, data: { body: {
     access_token: accessToken,
     token_type: 'bearer',
     expiresIn: 3600,
-    refresh_token: 'IwOGYzYTlmM2YxOTQ5MGE3YmNmMDFkNTVk',
+    refresh_token,
+    scope: 'any'
+  } } }
+}
+
+async function handleRefreshTokenGrand(req) {
+  try {
+    verify(req.body.refresh_token, config.apps[0].refresh_code_secret )
+  } catch (e) {
+    return unauthorized('something wrong with the refresh_token')
+  }
+
+  const accessToken = sign({
+    expiresIn: 3600,
+    scope: 'any'
+  }, config.apps[0].access_code_secret)
+
+  return { status: 200, data: { body: {
+    access_token: accessToken,
+    token_type: 'bearer',
+    expiresIn: 3600,
     scope: 'any'
   } } }
 }

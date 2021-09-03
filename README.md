@@ -73,20 +73,25 @@ client_id:    fjsyt27-test-app
 ```
 curl \
   -H "Content-Type: application/json" \
-  -d '{"code": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2MzA2NTI2MjUsImV4cCI6MTYzMDgyNTQyNX0.8m9vi-DCtZxJLskBkjAGrI8fsdc8AnDaDNt5Bd7oN_M", "grant_type": "code", "redirect_uri": "http://localhost:3000/callback",  "client_id": "fjsyt27-test-app"}' \
+  -d '{"code": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2MzA2NTQxNjksImV4cCI6MTYzMDgyNjk2OX0.6ptqgJMO5WuvBc6rK2Lp8PMs1TyVmwTECMNYUnVz0wk", "grant_type": "code", "redirect_uri": "http://localhost:3000/callback",  "client_id": "fjsyt27-test-app"}' \
   http://localhost:8000/api/access
+```
+
+## use refresh token
+
+refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjoid2UgdGhpbmsgYWJvdXQgdGhpcyBsYXRlciIsImlhdCI6MTYzMDY2Mjc3OSwiZXhwIjoxNjMwNjY2Mzc5fQ.ToazYw56vEC3AlKaV9w0tymsceHAlutCRr1QxnJPceY
+grant_type:    code
+redirect_uri:  http://localhost:3000/callback
+client_id:     fjsyt27-test-app
+
+```
+curl \
+  -H "Content-Type: application/json" \
+  -d '{"refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjoid2UgdGhpbmsgYWJvdXQgdGhpcyBsYXRlciIsImlhdCI6MTYzMDY2Mjc3OSwiZXhwIjoxNjMwNjY2Mzc5fQ.ToazYw56vEC3AlKaV9w0tymsceHAlutCRr1QxnJPceY", "grant_type": "refresh_token", "redirect_uri": "http://localhost:3000/callback",  "client_id": "fjsyt27-test-app"}' \
+  http://localhost:8000/api/access
+```
 
 
+## generate key pair
 
-
-Host: authorization-endpoint.com
-  grant_type=code
-  &code=Yzk5ZDczMzRlNDEwY
-  &redirect_uri=https://example-app.com/cb
-  &client_id: "fjsyt27-test-app"
-
-
-
-
-authorize
-
+`openssl genrsa -out config/private.pem 2048 && openssl rsa -in config/private.pem -pubout > config/public.pem`

@@ -2,5 +2,5 @@ node_modules
 target
 .babelcache
 config/dev.js
-config/id_rsa
-config/id_rsa.pub
+config/private.pem
+config/public.pem
