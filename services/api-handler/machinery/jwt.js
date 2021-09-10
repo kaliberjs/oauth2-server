@@ -11,9 +11,9 @@ module.exports = {
   verifyAuthenticationToken
 }
 
-function makeAuthenticationToken(content, { authenticationTokenSecret, authenticationTokenTtl }) {
+function makeAuthenticationToken(payload, { authenticationTokenSecret, authenticationTokenTtl }) {
   return jwt.sign(
-    content,
+    payload,
     authenticationTokenSecret,
     {
       expiresIn: authenticationTokenTtl
@@ -46,9 +46,19 @@ function makeAccessToken(content, { accessTokenSecret, accessTokenTtl }) {
 }
 
 function verifyAuthenticationToken(token, { authenticationTokenSecret }) {
-  return jwt.verify(token, authenticationTokenSecret, {
-    algorithms: ['HS256']
-  })
+  try {
+    return {
+      valid: true,
+      payload: jwt.verify(token, authenticationTokenSecret, {
+        algorithms: ['HS256']
+      }),
+    }
+  } catch (e) {
+    return {
+      valid: false,
+      error: e,
+    }
+  }
 }
 function verifyAuthorizationToken(token, { authorizeTokenSecret }) {
 

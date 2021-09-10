@@ -4,18 +4,18 @@ import { redirect } from '/util/redirect'
 
 export function MyComponent() {
 
-  const { login, logingIn, logedin } = useLogin()
+  const { login, logingIn, loggedIn } = useLogin()
 
   const [username, setUsername ] = useState('valid-user')
   const [password, setPassword ] = useState('valid-password')
 
   useEffect(
     () => {
-      if (logedin) {
+      if (loggedIn) {
         // redirect(`/authorize${window.location.search}`)
       }
     },
-    [logedin]
+    [loggedIn]
   )
 
   return (
