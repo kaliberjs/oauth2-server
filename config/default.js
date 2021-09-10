@@ -12,7 +12,7 @@ module.exports = {
   apps: [
     {
       name: 'test',
-      client_id: '7165549821652',
+      clientId: '7165549821652',
     }
   ],
 

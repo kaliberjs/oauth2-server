@@ -6,14 +6,17 @@ export function MyComponent() {
 
   const { login, logingIn, logedin } = useLogin()
 
-  const [username, setUsername ] = useState('rick')
-  const [password, setPassword ] = useState('pass')
+  const [username, setUsername ] = useState('valid-user')
+  const [password, setPassword ] = useState('valid-password')
 
-  useEffect(() => {
-    if (logedin) {
-      redirect(`/authorize${window.location.search}`)
-    }
-  }, [logedin])
+  useEffect(
+    () => {
+      if (logedin) {
+        // redirect(`/authorize${window.location.search}`)
+      }
+    },
+    [logedin]
+  )
 
   return (
     <div>

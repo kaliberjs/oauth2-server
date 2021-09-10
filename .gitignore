@@ -1,6 +1,7 @@
 node_modules
 target
 .babelcache
+coverage
 config/dev.js
 config/private.pem
 config/public.pem

@@ -1,0 +1,32 @@
+{
+    "typeAcquisition": {
+        "enable": true
+    },
+    "include": [
+        "./src/**/*",
+        "./types/**/*"
+    ],
+    "compilerOptions": {
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "allowSyntheticDefaultImports": true,
+        "downlevelIteration": true,
+        "lib": [
+            "dom",
+            "esnext"
+        ],
+        "jsx": "react-jsx",
+        "baseUrl": ".",
+        "allowJs": true,
+        "checkJs": true,
+        "noEmit": true,
+        "paths": {
+            "/*": [
+                "src/*"
+            ],
+            "/*?universal": [
+                "src/*"
+            ]
+        }
+    }
+}

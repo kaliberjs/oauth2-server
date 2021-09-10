@@ -22,7 +22,7 @@ Windows Live: 00000000400ECB04
 ```
 https://authorization-server.com/auth?response_type=code
 &client_id=29352735982374239857
-&redirect_uri=https://example-app.com/callback
+&redirect_url=https://example-app.com/callback
 &scope=create+delete
 &state=xcoivjuywkdkhvusuye3kch
 ```
@@ -60,20 +60,24 @@ https://authorization-server.com/token (JWT with private key) -> access token
 resource server (bearer token JTW validate with public key)
 
 ## authorize
-http://localhost:8000/authorize/?response_type=code&client_id=fjsyt27-test-app&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fcallback&scope=any&state=hAdH3kGAS3gf2kwfy1
+http://localhost:8000/authorize/?response_type=code&client_id=fjsyt27-test-app&redirect_url=http%3A%2F%2Flocalhost%3A3000%2Fcallback&scope=any&state=hAdH3kGAS3gf2kwfy1
+
+## authorize test
+http://localhost:8000/authorize?response_type=code&client_id=valid-client&redirect_url=valid-test-url&scope=any&state=hAdH3kGAS3gf2kwfy1
+
 
 
 ## get access token
 
 code:         eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2MzA2NTQxNjksImV4cCI6MTYzMDgyNjk2OX0.6ptqgJMO5WuvBc6rK2Lp8PMs1TyVmwTECMNYUnVz0wk
 grant_type:   code
-redirect_uri: http://localhost:3000/callback
+redirect_url: http://localhost:3000/callback
 client_id:    fjsyt27-test-app
 
 ```
 curl \
   -H "Content-Type: application/json" \
-  -d '{"code": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2MzA2NTQxNjksImV4cCI6MTYzMDgyNjk2OX0.6ptqgJMO5WuvBc6rK2Lp8PMs1TyVmwTECMNYUnVz0wk", "grant_type": "code", "redirect_uri": "http://localhost:3000/callback",  "client_id": "fjsyt27-test-app"}' \
+  -d '{"code": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2MzExOTM0NTYsImV4cCI6MTYzMTM2NjI1Nn0.hz22eAYxTMDuQjvtWMSGC5fUbw758GYPWkxjsel04Kk", "grant_type": "authorization_code", "redirect_url": "http://localhost:3000/callback",  "client_id": "fjsyt27-test-app"}' \
   http://localhost:8000/api/access
 ```
 
@@ -81,13 +85,13 @@ curl \
 
 refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjoid2UgdGhpbmsgYWJvdXQgdGhpcyBsYXRlciIsImlhdCI6MTYzMDY2Mjc3OSwiZXhwIjoxNjMwNjY2Mzc5fQ.ToazYw56vEC3AlKaV9w0tymsceHAlutCRr1QxnJPceY
 grant_type:    code
-redirect_uri:  http://localhost:3000/callback
+redirect_url:  http://localhost:3000/callback
 client_id:     fjsyt27-test-app
 
 ```
 curl \
   -H "Content-Type: application/json" \
-  -d '{"refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjoid2UgdGhpbmsgYWJvdXQgdGhpcyBsYXRlciIsImlhdCI6MTYzMDY2Mjc3OSwiZXhwIjoxNjMwNjY2Mzc5fQ.ToazYw56vEC3AlKaV9w0tymsceHAlutCRr1QxnJPceY", "grant_type": "refresh_token", "redirect_uri": "http://localhost:3000/callback",  "client_id": "fjsyt27-test-app"}' \
+  -d '{"refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjoid2UgdGhpbmsgYWJvdXQgdGhpcyBsYXRlciIsImlhdCI6MTYzMDY2Mjc3OSwiZXhwIjoxNjMwNjY2Mzc5fQ.ToazYw56vEC3AlKaV9w0tymsceHAlutCRr1QxnJPceY", "grant_type": "refresh_token", "redirect_url": "http://localhost:3000/callback",  "client_id": "fjsyt27-test-app"}' \
   http://localhost:8000/api/access
 ```
 
@@ -95,3 +99,23 @@ curl \
 ## generate key pair
 
 `openssl genrsa -out config/private.pem 2048 && openssl rsa -in config/private.pem -pubout > config/public.pem`
+
+
+## Authorization Response errors
+
+ - invalid_request
+ - access_denied
+ - unauthorized_client
+ - unsupported_response_type
+ - invalid_scope
+ - server_error
+ - temporarily_unavailable
+
+
+## Access Token Response errors
+ - invalid_request
+ - invalid_client
+ - invalid_grant
+ - invalid_scope
+ - unauthorized_client
+ - unsupported_grant_type

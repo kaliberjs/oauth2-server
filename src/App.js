@@ -1,4 +1,4 @@
-export default function App({ clientConfig, location }) {
+export default function App() {
   return (
     <>Hoi</>
   )

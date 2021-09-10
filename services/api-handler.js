@@ -1,10 +1,40 @@
-const { badRequest, unauthorized } = require('./api-handler/machinery/httpResponses')
-const { sign, verify } = require('./jwt')
 const config = require('@kaliber/config')
 
-module.exports = async function handleApiRequest(location, req) {
+const {
+  badRequest,
+  methodNotAllowed,
+  unauthorized,
+  accessTokenResponse,
+  notFound,
+  invalidGrant,
+  invalidRequest,
+  invalidClient
+} = require('./api-handler/machinery/httpResponses')
 
+const {
+  makeAuthorizationToken,
+  makeAccessToken,
+  makeRefreshToken,
+  makeAuthenticationToken,
+} = require('./api-handler/machinery/jwt')
+
+const {
+  validateRefreshTokenGrant,
+  validateAuthorize,
+  validateCodeGrant,
+  validateAccess
+} = require('./api-handler/machinery/validateRequest')
+
+module.exports = handleApiRequest
+
+async function handleApiRequest(location, req) {
+  if (req.method === 'GET') return handleGet(location)
   if (req.method === 'POST') return handlePost(location, req)
+
+  return methodNotAllowed()
+}
+
+async function handleGet() {
   const status = 200
   const data = null
   const headers = null
@@ -15,6 +45,8 @@ async function handlePost(location, req) {
   if (location.pathname === '/api/authenticate') return handleAuthenticate(req)
   if (location.pathname === '/api/authorize') return handleAuthorize(req)
   if (location.pathname === '/api/access') return handleAccess(req)
+
+  return notFound('resource not found')
 }
 
 async function handleAuthenticate(req) {
@@ -22,89 +54,140 @@ async function handleAuthenticate(req) {
 
   const { username, password } = req.body
 
-  if (username === 'rick' && password === 'pass') {
-    return { status: 200, data: { body: { username: 'rick', id: 3 } } }
-  } else return unauthorized('Invalid credentials')
+  if (username === 'valid-user' && password === 'valid-password') {
+    const authToken = makeAuthenticationToken(
+      {
+        user: 'rick',
+        id: 3
+      },
+      config
+    )
+
+    return {
+      status: 303,
+      data: { body: { logedin:true } },
+      // What rules to add?
+      headers: {
+        'Set-Cookie': `session=${authToken}; Path=/ Secure; HttpOnly`,
+      }
+    }
+  } else {
+    return unauthorized('Invalid credentials')
+  }
 }
 
 async function handleAuthorize(req) {
+  const {
+    client_id,
+    redirect_url,
+    state
+  } = req.query
 
-  const code = sign({ user: req.body.username, id: req.body.id }, config.apps[0].authorize_code_secret, {
-    expiresIn: '2 days'
-  })
+  const clientConfig = findApp(client_id)
 
-  console.log(code)
+  // When we can not find a app in the configuration it means there is something
+  // wrong with the client_it
+  if (!clientConfig) {
+    return invalidRequest('client_id parameter missing')
+  }
 
-  return { status: 200, data: { body: { code } } }
+  const errorRes = validateAuthorize(req.query, clientConfig)
+  if (errorRes !== null) return validationErrorToExpressResponse(errorRes)
+
+  const accessToken = makeAuthorizationToken({
+    user: req.body.username,
+    id: req.body.id
+  }, clientConfig)
+
+  return {
+    status: 200,
+    data: {
+      body: {
+        redirectUrl: `${redirect_url}?code=${accessToken}&state=${state}`
+      }
+    },
+    headers: {
+      'Set-Cookie': `accessToken=${accessToken}; Path=/`,
+    }
+  }
 }
 
 async function handleAccess(req) {
-  if (req.body.grant_type === 'code') return handleCodeGrand(req)
-  if (req.body.grant_type === 'refresh_token') return handleRefreshTokenGrand(req)
-}
+  const errorRes = validateAccess(req.body)
+  if (errorRes !== null) return validationErrorToExpressResponse(errorRes)
 
-async function handleCodeGrand(req) {
-  try {
-    verify(req.body.code, config.apps[0].authorize_code_secret )
-  } catch (e) {
-    return unauthorized('something wrong with the authorize_code')
+  // When we can not find a app in the configuration it means there is something
+  // wrong with the client_it
+  if (!findApp(req.body.client_id)) {
+    return invalidClient()
   }
 
-  const refresh_token = sign({
-    data: 'we think about this later'
-  },
-  config.apps[0].refresh_code_secret,
-  {
-    expiresIn: '1h'
-  })
+  if (req.body.grant_type === 'authorization_code') return handleCodeGrant(req)
+  if (req.body.grant_type === 'refresh_token') return handleRefreshTokenGrant(req)
 
-  const accessToken = sign({
+  return invalidGrant()
+}
+
+async function handleCodeGrant(req) {
+  const { client_id } = req.body
+  const clientConfig = findApp(client_id)
+
+  const errorRes = validateCodeGrant(req.body, clientConfig)
+  if (errorRes !== null) return validationErrorToExpressResponse(errorRes)
+
+  const refresh_token = makeRefreshToken({
+    content: 'we think about this later'
+  }, clientConfig)
+
+  const accessToken = makeAccessToken({
     expiresIn: 3600,
     scope: 'any'
-  }, config.apps[0].access_code_secret)
+  }, clientConfig)
 
-  return { status: 200, data: { body: {
-    access_token: accessToken,
-    token_type: 'bearer',
-    expiresIn: 3600,
+  return accessTokenResponse({
     refresh_token,
-    scope: 'any'
-  } } }
-}
-
-async function handleRefreshTokenGrand(req) {
-  try {
-    verify(req.body.refresh_token, config.apps[0].refresh_code_secret )
-  } catch (e) {
-    return unauthorized('something wrong with the refresh_token')
-  }
-
-  const accessToken = sign({
-    expiresIn: 3600,
-    scope: 'any'
-  }, config.apps[0].access_code_secret)
-
-  return { status: 200, data: { body: {
     access_token: accessToken,
     token_type: 'bearer',
     expiresIn: 3600,
     scope: 'any'
-  } } }
+  })
 }
 
-/*
-grant_type=code
-&code=Yzk5ZDczMzRlNDEwY
-&redirect_uri=https://example-app.com/cb
-&client_id=mRkZGFjM
+async function handleRefreshTokenGrant(req) {
+  const { client_id } = req.body
+  const clientConfig = findApp(client_id)
 
-->>
+  const errorRes = validateRefreshTokenGrant(req.body, clientConfig)
+  if (errorRes !== null) return validationErrorToExpressResponse(errorRes)
 
-{
-  "access_token":"MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
-  "token_type":"bearer",
-  "expires_in":3600,
-  "refresh_token":"IwOGYzYTlmM2YxOTQ5MGE3YmNmMDFkNTVk",
-  "scope":"create"
+  const accessToken = makeAccessToken({
+    expiresIn: 3600,
+    scope: 'any'
+  }, client_id)
+
+  return accessTokenResponse({
+    access_token: accessToken,
+    token_type: 'bearer',
+    expiresIn: 3600,
+    scope: 'any'
+  })
 }
-*/
+
+function validationErrorToExpressResponse({ status, error, error_description }) {
+  return {
+    status: 400,
+    data: {
+      body: {
+        error,
+        ...(error_description !== undefined
+          ? { error_description }
+          : {})
+      }
+    }
+  }
+}
+
+function findApp(clientId) {
+  return config.apps.find(app => app.clientId === clientId)
+}
+

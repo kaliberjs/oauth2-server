@@ -1,39 +1,27 @@
 import { request } from '/util/request'
-import { setPersistent, getPersistent } from '/util/persistState'
-import { serialize } from '/util/serialize'
+import { redirect } from '/util/redirect'
 
-const AUTHORIZED_KEY = 'authorization_code'
 const AUTHORIZE_PATH = '/api/authorize'
 
 export const useAuthorize = () => {
-  const [code, setCode] = React.useState()
   const [authorizeing, setAuthorizeing] = React.useState(false)
 
-  React.useEffect(() => {
-    const code = getPersistent(AUTHORIZED_KEY)
+  return { authorize, authorizeing }
 
-    if (code) {
-      setCode(code)
-    }
-  }, [])
-
-  const authorize = ({ username, id }) => {
+  async function authorize(accept) {
     setAuthorizeing(true)
 
-    request (AUTHORIZE_PATH, serialize({ username, id }))
-      .then(res => {
-        return res.json()
+    const res = await request(
+      `${AUTHORIZE_PATH}${window.location.search}`,
+      JSON.stringify({
+        authorize: accept
       })
-      .then(data => {
-        console.log(data)
-        if (data.code) {
-          setPersistent(AUTHORIZED_KEY, data.code)
+    )
 
-          setCode(data.code)
-          setAuthorizeing(false)
-        }
-      })
+    const { redirectUrl } = await res.json()
+
+    if (redirectUrl) {
+      redirect(redirectUrl)
+    }
   }
-
-  return { authorize, authorizeing, code }
 }

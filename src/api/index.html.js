@@ -1,5 +1,5 @@
-// // @ts-ignore
-// // eslint-disable-next-line no-undef
+// @ts-ignore
+// eslint-disable-next-line no-undef
 const config = __non_webpack_require__('@kaliber/config')
 
 Index.routes = {

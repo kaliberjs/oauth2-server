@@ -1,3 +1,3 @@
-export const redirect = (location) => {
+export function redirect(location) {
   window.location.href = location
 }

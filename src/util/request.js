@@ -1,4 +1,4 @@
-export const request = (url, body, options = {}) => {
+export function request(url, body, options = {}) {
   return fetch(url, {
     method: 'POST',
     mode: 'cors', // no-cors, *cors, same-origin
