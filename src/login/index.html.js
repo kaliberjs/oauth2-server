@@ -8,25 +8,19 @@ import polyfill from '@kaliber/build/lib/polyfill'
 import '/index.css'
 
 import { QueryClient, QueryClientProvider } from 'react-query'
+import { redirect } from '/util/redirect'
 const { parseCookies  } = require('../../services/api-handler/machinery/cookiesParser')
 const {  verifyAuthenticationToken } = require('../../services/api-handler/machinery/jwt')
 
 const queryClient = new QueryClient()
 
 Index.routes = {
-  match: async (_, req) => {
+  match: async (location, req) => {
     const { session } = parseCookies(req)
 
     try {
-      if (verifyAuthenticationToken(session, config)) {
-        return {
-          status:303,
-          data: {},
-          headers: {
-            // it doesn't look like I'm supposed to use _parsedOriginalUrl
-            'Location': `/authorize${req._parsedOriginalUrl.search}}`
-          }
-        }
+      if (isLoggedIn(session, config)) {
+        return redirect(303, `/authorize${location.search}}`)
       }
     } catch (e) {
       return { status:200, data: {}, headers: null }

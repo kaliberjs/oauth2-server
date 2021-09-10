@@ -16,7 +16,7 @@ export const useLogin = () => {
       const res = await request(AUTHENTICATE_PATH, JSON.stringify({ username, password }))
       const data = await res.json()
 
-      if (data && data.logedin) {
+      if (data && data.loggedIn) {
         redirect(`/login${window.location.search}`)
       }
     } catch (e) {

@@ -34,49 +34,46 @@ async function handleApiRequest(location, req) {
   return methodNotAllowed()
 }
 
-async function handleGet() {
-  const status = 200
-  const data = null
-  const headers = null
-  return { status, headers, data }
+async function handleGet(location, req) {
+  if (location.pathname === '/authorize')
+    return handleAuthorize(req)
+
+  return { status: 200, headers: null, data: null }
 }
 
 async function handlePost(location, req) {
-  if (location.pathname === '/api/authenticate') return handleAuthenticate(req)
-  if (location.pathname === '/api/authorize') return handleAuthorize(req)
-  if (location.pathname === '/api/access') return handleAccess(req)
+  if (location.pathname === '/api/authenticate')
+    return handleAuthenticate(req, { getAuthenticationTokenPayload })
+
+  if (location.pathname === '/api/authorize')
+    return handleAcceptAuthorization(req)
+
+  if (location.pathname === '/api/access')
+    return handleAccess(req)
 
   return notFound('resource not found')
 }
 
-async function handleAuthenticate(req) {
+async function handleAuthenticate(req, { getAuthenticationTokenPayload }) {
   if (!req.body) return badRequest('No body provided')
 
-  const { username, password } = req.body
+  const payload = await getAuthenticationTokenPayload(req.body)
+  if (!payload) return unauthorized('Invalid credentials')
 
-  if (username === 'valid-user' && password === 'valid-password') {
-    const authToken = makeAuthenticationToken(
-      {
-        user: 'rick',
-        id: 3
-      },
-      config
-    )
+  const authToken = makeAuthenticationToken( payload, config.server.authenticationToken )
 
-    return {
-      status: 303,
-      data: { body: { logedin:true } },
-      // What rules to add?
-      headers: {
-        'Set-Cookie': `session=${authToken}; Path=/ Secure; HttpOnly`,
-      }
+  return {
+    status: 200,
+    data: { body: payload },
+    headers: {
+      // TODO: cookie.serialize(...)
+      // TODO: add authenticationTokenTtl as expiration
+      'Set-Cookie': `session=${authToken}; Path=/ Secure; HttpOnly`,
     }
-  } else {
-    return unauthorized('Invalid credentials')
   }
 }
 
-async function handleAuthorize(req) {
+async function handleAcceptAuthorization(req) {
   const {
     client_id,
     redirect_url,
@@ -191,3 +188,12 @@ function findApp(clientId) {
   return config.apps.find(app => app.clientId === clientId)
 }
 
+async function getAuthenticationTokenPayload(body) {
+  const { username, password } = body
+  if (username === 'valid-user' && password === 'valid-password') {
+    return {
+      user: 'rick',
+      id: 3
+    }
+  }
+}

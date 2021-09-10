@@ -19,10 +19,9 @@ module.exports = {
   validateAuthorizeGet,
 }
 
-
 function validateAuthorizeGetDisplayErrors({ client_id, redirect_url }, clientConfig) {
   if (isUndefined(client_id)) return invalidRequest('client_id parameter missing')
-  if (isUndefined(redirect_url)) return invalidRequest('redirect_url parameter missing')
+  if (isUndefined(redirect_url)) return parameterMissing('redirect_url')
 
   return validateRules([
     hasValidRedirectUrl(redirect_url, clientConfig)

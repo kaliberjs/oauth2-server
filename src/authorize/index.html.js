@@ -21,7 +21,11 @@ function findApp(clientId) {
 }
 
 Index.routes = {
-  match: async (_, req) => {
+  match: async (location, req) => {
+
+    const response = await handleAuthorize(location, req)
+    if (response) return response
+
     const {
       client_id,
       redirect_url,
@@ -43,29 +47,9 @@ Index.routes = {
 
     const { session, accessToken } = parseCookies(req)
 
-    if (accessToken) {
-      return {
-        status:303,
-        data: {},
-        headers: {
-          'Location': `${redirect_url}?code=${accessToken}&state=${state}`
-        }
-      }
-    }
+    if (accessToken) return redirect(303, `${redirect_url}?code=${accessToken}&state=${state}`)
 
-    try {
-      verifyAuthenticationToken(session, config)
-    } catch (e) {
-
-      return {
-        status:303,
-        data: {},
-        headers: {
-          // it doesn't look like I'm supposed to use _parsedOriginalUrl
-          'Location': `/login${req._parsedOriginalUrl.search}`
-        }
-      }
-    }
+    if (!isLoggedIn(session, config)) redirect(303, `/login${location.search}`)
 
     return { status:200, data: {}, headers: null }
   }
